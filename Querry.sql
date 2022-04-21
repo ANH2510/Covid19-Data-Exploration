@@ -76,23 +76,6 @@ Group by dea.continent
 Order by PeopleVaccinated DESC
 --At the first place, there are 6,7 billions vaccine doses are given in Asia, on the second position is Europe with 1 billion doses.
 
-With PopvsVac(Continent, Population, PeopleVaccinated)
-as
-(
-Select dea.continent,dea.population, sum(cast(vac.new_vaccinations as bigint)) as PeopleVaccinated
-From PortfolioProject.dbo.CovidDeaths dea
-Join PortfolioProject.dbo.CovidVaccinations vac
-	On dea.location = vac.location
-	and dea.date = vac.date
-Where dea.continent is not null
-Group by dea.continent,dea.population)
-
-Select *, (PeopleVaccinated/Population)*100 as PeopleVaccinatedPercentage
-From PopvsVac
-Order by PeopleVaccinatedPercentage DESC
---The Vaccination rate is quite approximate between continents: highest in North America with 274%,
--- 273% in Europe and 73% in Afica
-
 
 Select dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations
 , sum(convert(int, vac.new_vaccinations)) over (partition by dea.location order by dea.location
