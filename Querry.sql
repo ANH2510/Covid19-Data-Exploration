@@ -11,13 +11,45 @@ Order by 1,2
 
 --Breaking things down by continent
 --Continent with the highest death count
-Select continent, max(cast(total_deaths as int)) as TotalDeath
+
+Select continent, sum(total_cases) as TotalCase
+From PortfolioProject.dbo.CovidDeaths
+Where continent is not null
+Group By continent
+Order By TotalCase Desc
+
+Select continent, sum(total_cases)*100/(
+	Select sum(total_cases) as totalcasescont
+	From PortfolioProject.dbo.CovidDeaths
+	Where continent is not NULL) as casepercentage
+From PortfolioProject.dbo.CovidDeaths
+Where continent is not NULL
+Group By continent
+Order by casepercentage DESC
+
+-- Highest infection cases count is recorded in Europe accounts for 30% total cases in the world, following by Asia with 28%
+-- Oceania is continent with the least infection cases (0.3%)
+
+Select continent, sum(cast(total_deaths as int)) as TotalDeath
 From PortfolioProject.dbo.CovidDeaths
 Where continent is not null
 Group By continent
 Order By TotalDeath Desc
--- Highest death count is recorded in North America with nearly 900 thousand cases, following by South America with 662 thousand cases.
+
+Select continent, sum(cast(total_deaths as bigint))*100/(
+	Select sum(cast(total_deaths as bigint)) as totaldeath
+	From PortfolioProject.dbo.CovidDeaths
+	Where continent is not NULL) as deathpercentage
+From PortfolioProject.dbo.CovidDeaths
+Where continent is not NULL
+Group By continent
+Order by deathpercentage DESC
+
+
+-- Highest death count is recorded in Europe with nearly 64 millions cases (28% total death globally), following by North America with 54 Million cases (23%).
 -- Oceania is continent with the least death cases
+
+
 
 --Global number
 Select sum(total_cases) as total_cases, (sum(total_cases)/sum(population))*100 as InfectionPercentage,
@@ -25,6 +57,7 @@ sum(cast(total_deaths as bigint)) as total_deaths, (sum(cast(total_deaths as big
 From PortfolioProject.dbo.CovidDeaths
 Where continent is not null
 --Until April 2022, there are 120 billions infection cases (2% population) in the world, 2 billions recorded deaths 
+
 
 --Total Cases vs Total Death 
 Select continent, AVG((total_deaths/total_cases)*100) as AverageDeathPercentage
@@ -132,13 +165,4 @@ Where dea.continent is not null
 Select *, (RollingPeopleVaccinated/Population)*100 RollingPeopleVaccinatedPercentage
 From #VaccinatedPopulationPercentage
 
---Creating View to store data for later visulization
-Create View VaccinatedPopulationPercentage as
-Select dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations
-, sum(convert(int, vac.new_vaccinations)) over (partition by dea.location order by dea.location
-,dea.date) as RollingPeopleVaccinated
-From PortfolioProject.dbo.CovidDeaths dea
-Join PortfolioProject.dbo.CovidVaccinations vac
-	On dea.location = vac.location
-	and dea.date = vac.date
-Where dea.continent is not null
+
